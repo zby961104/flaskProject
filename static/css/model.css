@@ -1,0 +1,19 @@
+.main{
+    text-align: center; /*让div内部文字居中*/
+	/*background-color: #fff;*/
+	border-radius: 20px;
+	width: 1000px;
+	height: 350px;
+	margin: auto;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 1;
+}
+
+.model-name{
+    font-family: "Times New Roman", Times, serif;
+    font-size: 50px;
+}

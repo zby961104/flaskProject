@@ -1,0 +1,35 @@
+ <html>
+   <head>
+     <title>Prediction Results</title>
+       <link rel="stylesheet" type="text/css" href="../static/css/share.css">
+     <link rel="stylesheet" type="text/css" href="../static/css/predict-result.css">
+   </head>
+   <body>
+       <div class="top">
+                <ul>
+                    <li><a href="{{ url_for('home') }}">主页</a></li>
+                <li><a href="{{ url_for('toDatasetPage') }}">基准数据集</a></li>
+                <li><a href="{{ url_for('toModelPage') }}">模型介绍</a></li>
+                <li><a href="{{ url_for('toPredictPage') }}">性质预测</a></li>
+                </ul>
+       </div>
+
+       <div class="main-box">
+           <h1 style="font-size: 30px">性质预测结果及对应的概率：</h1>
+           <p style="font-size: 20px">预测结果: {{ predicted_class }}</p>
+           <p style="font-size: 20px">概率: {{ probability }}%</p>
+           <p style="font-size: 5px">(概率百分比保留小数点后一位)</p>
+{#           <h2>所有类别的概率如下：</h2>#}
+{#           <ul style="list-style: none">#}
+{#               {%for class_name, prob in class_probs%}#}
+{#                 <li>{{ class_name }}: {{ prob }}%</li>#}
+{#               {%endfor%}#}
+{#           </ul>#}
+
+           <button class="btn" onclick="window.location.href='./predict-page'">返回预测页面</button>
+
+       </div>
+
+
+   </body>
+ </html>

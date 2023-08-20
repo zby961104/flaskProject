@@ -1,0 +1,33 @@
+ <html>
+   <head>
+     <title>Molecular Property Prediction</title>
+     <link rel="stylesheet" type="text/css" href="../static/css/share.css">
+     <link rel="stylesheet" type="text/css" href="../static/css/predict-page.css">
+   </head>
+   <body>
+     <div class="top">
+            <ul>
+                <li><a href="{{ url_for('home') }}">主页</a></li>
+                <li><a href="{{ url_for('toDatasetPage') }}">基准数据集</a></li>
+                <li><a href="{{ url_for('toModelPage') }}">模型介绍</a></li>
+                <li><a href="{{ url_for('toPredictPage') }}">性质预测</a></li>
+            </ul>
+     </div>
+     <div class="predict-box">
+         <h1>分子性质预测</h1>
+         <form class="predict-form" method="POST" enctype="multipart/form-data" action="/predict">
+             <label for="property" class="form-label">1. 请选择所要预测的分子性质：</label><br><br><br>
+             <select id="property" name="property" class="from-select">
+                 <option value="BACE">BACE-1抑制活性</option>
+                 <option value="BBBP">血脑屏障穿透性</option>
+             </select>
+             <br><br><br>
+             <label for="smiles" class="form-label">2. 请输入所要预测的分子的SMILES:</label><br><br><br>
+             <input type="text" id="smiles" name="smiles" class="form-input" value="Fc1ccc(NC(=O)c2ncc(cc2)C#N)cc1[C@]1(N=C(OCC1(F)F)N)C"><br><br><br><br>
+             <input class="btn" type="submit" value="开始预测">
+        </form>
+     </div>
+
+
+   </body>
+ </html>

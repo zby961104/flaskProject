@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="../static/css/share.css">
+        <link rel="stylesheet" type="text/css" href="../static/css/model.css">
+    </head>
+    <body>
+        <div class="top">
+            <ul>
+                <li><a href="{{ url_for('home') }}">主页</a></li>
+                <li><a href="{{ url_for('toDatasetPage') }}">基准数据集</a></li>
+                <li><a href="{{ url_for('toModelPage') }}">模型介绍</a></li>
+                <li><a href="{{ url_for('toPredictPage') }}">性质预测</a></li>
+            </ul>
+        </div>
+
+        <div class="main">
+            <div class="model-name">GSL-MPP整体架构</div>
+            <div class="model-img">
+                <img src="../static/img/model.png">
+            </div>
+
+        </div>
+
+    </body>
+</html>

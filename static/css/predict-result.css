@@ -1,0 +1,51 @@
+body{
+	background-image: url("../img/b.jpg");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+}
+
+.btn {
+    margin: auto;
+
+    position: relative;
+    top: 30px;
+    /* 文字颜色 */
+    color: black;
+    /* 清除背景色 */
+    background: transparent;
+    /* 边框样式、颜色、宽度 */
+    border: 2px solid black;
+    /* 给边框添加圆角 */
+    border-radius: 6px;
+    /* 字母转大写 */
+    padding: 16px 32px;
+
+    display: inline-block;
+    font-size: 16px;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+    cursor: pointer;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.btn:hover {
+    background-color: royalblue;
+    color: white;
+}
+
+.main-box{
+    text-align: center;
+	border-radius: 8px;
+	border: 1px solid gray;
+	box-shadow: 0 3px 5px 3px gray;
+	width: 500px;
+	height: 600px;
+	margin: auto;
+	position: absolute;
+	top: 80px;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}

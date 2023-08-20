@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="../static/css/share.css">
+        <link rel="stylesheet" type="text/css" href="../static/css/index.css">
+    </head>
+    <body>
+        <div class="top">
+            <ul>
+                <li><a href="{{ url_for('home') }}">主页</a></li>
+                <li><a href="{{ url_for('toDatasetPage') }}">基准数据集</a></li>
+                <li><a href="{{ url_for('toModelPage') }}">模型介绍</a></li>
+                <li><a href="{{ url_for('toPredictPage') }}">性质预测</a></li>
+            </ul>
+        </div>
+
+        <div class="main">
+            <img src="../static/img/mol.jpeg"><div class="model-short-name">GSL-MPP</div>
+            <p class="model-full-name">Molecular Property Prediction Based on Graph Structure Learning</p>
+            <button type="button" class="btn" onclick="window.location.href='./predict-page'">开始预测</button>
+        </div>
+
+    </body>
+</html>
+
