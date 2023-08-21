@@ -1,11 +1,16 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify, send_file
 from models.gsl_mol import GslMolNet
 from utils.config import Configs, build_criterion
 import torch
+from flask_cors import CORS
+import json
+from utils.file_operation import *
+import uuid
 
 app = Flask(__name__)
+CORS(app)
 
-
+BASE_PATH = "static/bulk-result/"
 @app.route('/')
 def home():  # put application's code here
     # return render_template('predict-page.html')
@@ -26,12 +31,18 @@ def toDatasetPage():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    smiles = request.form.get('smiles')
-    dataset = request.form.get('property')
+    data = request.get_data()
+    data = json.loads(data)
+    print(data)
+    smiles = data['smiles']
+    username = data['username']
+    dataset = data['dataset']
+    remember = data['remember']
 
     print("smiles:", smiles)
-
-    print(dataset)
+    print("dataset:", dataset)
+    print("remember", remember)
+    print("username", username)
 
     if dataset == 'BACE':
         class_names = ["有活性", "无活性"]
@@ -70,8 +81,71 @@ def predict():
     class_probs = list(zip(class_names, probabilities))
     class_probs.sort(key=lambda x: x[1], reverse=True)
 
-    return render_template('predict-result.html', class_probs=class_probs,
-                           predicted_class=predicted_class, probability=probability)
+    return jsonify({"result": predicted_class})
+
+@app.route('/predictAll', methods=['POST'])
+def predictAll():
+    data = request.get_data()
+    data = json.loads(data)
+    print(data)
+    smilesList = data['smiles']
+    username = data['username']
+    dataset = data['dataset']
+    remember = data['remember']
+
+    print("smiles:", smilesList)
+    print("dataset:", dataset)
+    print("remember", remember)
+    print("username", username)
+
+    if dataset == 'BACE':
+        class_names = ["有活性", "无活性"]
+    elif dataset == 'BBBP':
+        class_names = ["能穿透血脑屏障", "不能穿透血脑屏障"]
+
+    opt = Configs(ParamList)
+    device = torch.device(
+        f"cuda:{opt.args['CUDA_VISIBLE_DEVICES']}" if torch.cuda.is_available() else 'cpu')
+    criterion = build_criterion(opt.args['ClassNum'], opt.args['TaskNum'], device)
+    model = GslMolNet(opt, criterion).to(device)
+    ckpt = torch.load(opt.args["ModelPath"], map_location=device)
+    model.load_state_dict(ckpt['model'])
+
+    model.eval()
+
+    output = model.batch_run(smilesList)
+
+    print("output", output)
+
+    # Get class probabilities
+    probabilities = torch.nn.functional.softmax(output)
+    probabilities = probabilities.detach().numpy()
+
+    results = []
+    saved_results = []
+
+    for i in range(len(probabilities)):
+        p = probabilities[i]
+        class_index = p.argmax()
+        predicted_class = class_names[class_index]
+        # for i in range(len(probabilities)):
+        #     probabilities[i] = round(probabilities[i] * 100, 2)
+        #
+        # print("probabilities:", probabilities)
+        results.append(predicted_class)
+        saved_results.append({"smiles": smilesList[i], "result": predicted_class})
+
+    filename = username + str(uuid.uuid4()) + ".json"
+
+    save_result(BASE_PATH + filename, {"result": saved_results})
+
+    return jsonify({"result": results, "filename": filename})
+
+
+@app.route('/download/<filename>', methods=['GET'])
+def download_file(filename):
+    path = BASE_PATH + filename
+    return send_file(path, as_attachment=True)
 
 ParamList = {
     'CUDA_VISIBLE_DEVICES': '1',
@@ -113,4 +187,4 @@ ParamList = {
 }
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)

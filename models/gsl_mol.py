@@ -3,7 +3,7 @@ from torch import nn
 from .gnn import GCN
 from .graphlearn import GraphLearner
 import torch.nn.functional as F
-from utils.data_process import process_smiles
+from utils.data_process import process_smiles, process_all_smiles
 
 
 VERY_SMALL_NUMBER = 1e-12
@@ -107,11 +107,19 @@ class GslMolNet(nn.Module):
     def graph_maxpool(self, node_vec, node_mask=None):
         # Maxpool
         # Shape: (batch_size, hidden_size, num_nodes)
-        graph_embedding = F.max_pool1d(node_vec, kernel_size=node_vec.size(-1)).squeeze(-1)
+        if len(node_vec.shape) == 2:
+            node_vec = node_vec.unsqueeze(1)
+            graph_embedding = F.max_pool1d(node_vec, kernel_size=node_vec.size(-1)).squeeze(1).squeeze(-1)
+        else:
+            graph_embedding = F.max_pool1d(node_vec, kernel_size=node_vec.size(-1)).squeeze(-1)
         return graph_embedding
 
     def graph_meanpool(self, node_vec, node_mask=None):
-        graph_embedding = F.avg_pool1d(node_vec, kernel_size=node_vec.size(-1)).squeeze(-1)
+        if len(node_vec.shape) == 2:
+            node_vec = node_vec.unsqueeze(1)
+            graph_embedding = F.avg_pool1d(node_vec, kernel_size=node_vec.size(-1)).squeeze(1).squeeze(-1)
+        else:
+            graph_embedding = F.avg_pool1d(node_vec, kernel_size=node_vec.size(-1)).squeeze(-1)
         return graph_embedding
 
     def graph_addpool(self, node_vec, node_mask=None):
@@ -216,6 +224,7 @@ class GslMolNet(nn.Module):
 
         # BP to update weights
         output = self.encoder.graph_encoders[-1](node_vec, cur_adj)
+
         output = self.compute_output(output)
 
         first_raw_adj, first_adj = cur_raw_adj, cur_adj
@@ -246,6 +255,59 @@ class GslMolNet(nn.Module):
             output = self.compute_output(output)
 
         return output
+
+    def batch_run(self, smiles_list):
+
+        init_node_vec, init_adj, mask = process_all_smiles(smiles_list)
+
+        print("init_node_vec:", init_node_vec.shape)
+        print("init_adj:", init_adj.shape)
+
+        cur_raw_adj, cur_adj = self.learn_graph(self.graph_learner, init_node_vec, self.graph_skip_conn,
+                                                graph_include_self=self.graph_include_self,
+                                                init_adj=init_adj)
+        node_vec = torch.relu(self.encoder.graph_encoders[0](init_node_vec, cur_adj))
+        node_vec = F.dropout(node_vec, self.dropout, training=self.training)
+
+        # Add mid GNN layers
+        for encoder in self.encoder.graph_encoders[1:-1]:
+            node_vec = torch.relu(encoder(node_vec, cur_adj))
+            node_vec = F.dropout(node_vec, self.dropout, training=self.training)
+
+        # BP to update weights
+        output = self.encoder.graph_encoders[-1](node_vec, cur_adj)
+
+        output = self.compute_output(output)
+
+        first_raw_adj, first_adj = cur_raw_adj, cur_adj
+
+        iter_ = 0
+        max_iter_ = self.opt.args['max_iter']
+
+        while self.opt.args['graph_learn'] and iter_ < max_iter_:
+            iter_ += 1
+
+            cur_raw_adj, cur_adj = self.learn_graph(self.graph_learner2, node_vec, self.graph_skip_conn,
+                                                    graph_include_self=self.graph_include_self, init_adj=init_adj)
+
+            update_adj_ratio = self.opt.get_args('update_adj_ratio', None)
+            if update_adj_ratio is not None:
+                cur_adj = update_adj_ratio * cur_adj + (1 - update_adj_ratio) * first_adj
+
+            node_vec = torch.relu(self.encoder.graph_encoders[0](init_node_vec, cur_adj))
+            node_vec = F.dropout(node_vec, self.opt.get_args('gl_dropout', 0), training=self.training)
+
+            # Add mid GNN layers
+            for encoder in self.encoder.graph_encoders[1:-1]:
+                node_vec = torch.relu(encoder(node_vec, cur_adj))
+                node_vec = F.dropout(node_vec, self.opt.get_args('gl_dropout', 0), training=self.training)
+
+            # BP to update weights
+            output = self.encoder.graph_encoders[-1](node_vec, cur_adj)
+            output = self.compute_output(output)
+
+        return output
+
 
 
 

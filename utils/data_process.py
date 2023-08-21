@@ -29,6 +29,50 @@ def process_smiles(smiles):
 
     return mol_atom_feature, adj
 
+max_atom_num = -1
+def process_all_smiles(smiles_list):
+    max_atom_num = -1
+    for smiles in smiles_list:
+        mol = Chem.MolFromSmiles(smiles)
+        atom_num = len(mol.GetAtoms())
+        max_atom_num = max(max_atom_num, atom_num)
+
+    entire_atom_features = []
+    entire_adj = []
+    entire_atom_mask = []
+
+    for smiles in smiles_list:
+        mol = Chem.MolFromSmiles(smiles)
+        mol_atom_feature = np.zeros([max_atom_num, atom_feature_size])
+        adj = np.zeros([max_atom_num, max_atom_num])
+        mol_atom_mask = np.zeros([max_atom_num])
+
+        for atom in mol.GetAtoms():
+            idx = atom.GetIdx()
+            mol_atom_mask[idx] = 1.0
+            atom_feature = get_atom_feature(atom)
+            mol_atom_feature[idx] = atom_feature
+
+        for bond in mol.GetBonds():
+            start_atom = bond.GetBeginAtomIdx()
+            end_atom = bond.GetEndAtomIdx()
+            adj[start_atom, end_atom] = 1
+            adj[end_atom, start_atom] = 1
+
+        # mol_atom_feature = torch.Tensor(mol_atom_feature)
+        # adj = torch.Tensor(adj)
+        # mol_atom_mask = torch.Tensor(mol_atom_mask)
+
+        entire_atom_features.append(mol_atom_feature)
+        entire_adj.append(adj)
+        entire_atom_mask.append(mol_atom_mask)
+
+    entire_atom_features = torch.Tensor(entire_atom_features)
+    entire_adj = torch.Tensor(entire_adj)
+    entire_atom_mask = torch.Tensor(entire_atom_mask)
+
+    return entire_atom_features, entire_adj, entire_atom_mask
+
 
 def get_atom_feature(atom):
     feature = np.zeros(39)
