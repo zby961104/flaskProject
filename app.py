@@ -11,6 +11,10 @@ app = Flask(__name__)
 CORS(app)
 
 BASE_PATH = "static/bulk-result/"
+HISTORY_SINGLE_FILE = "static/history/single.json"
+HISTORY_BULK_FILE = "static/history/bulk.json"
+
+
 @app.route('/')
 def home():  # put application's code here
     # return render_template('predict-page.html')
@@ -21,13 +25,16 @@ def home():  # put application's code here
 def toPredictPage():
     return render_template('predict-page.html')
 
+
 @app.route('/model')
 def toModelPage():
     return render_template('model.html')
 
+
 @app.route('/dataset')
 def toDatasetPage():
     return render_template('dataset.html')
+
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -81,7 +88,12 @@ def predict():
     class_probs = list(zip(class_names, probabilities))
     class_probs.sort(key=lambda x: x[1], reverse=True)
 
+    time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    data = {"smiles": smiles, "username": username, "time": time, "result": predicted_class, "dataset": dataset}
+    saveToJsonFile(HISTORY_SINGLE_FILE, data)
+
     return jsonify({"result": predicted_class})
+
 
 @app.route('/predictAll', methods=['POST'])
 def predictAll():
@@ -139,6 +151,10 @@ def predictAll():
 
     save_result(BASE_PATH + filename, {"result": saved_results})
 
+    time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    data = {"username": username, "time": time, "dataset": dataset, "download_url": filename}
+    saveToJsonFile(HISTORY_BULK_FILE, data)
+
     return jsonify({"result": results, "filename": filename})
 
 
@@ -146,6 +162,19 @@ def predictAll():
 def download_file(filename):
     path = BASE_PATH + filename
     return send_file(path, as_attachment=True)
+
+
+@app.route('/history/single', methods=['GET'])
+def get_history_for_single_test():
+    data_list = readJsonFile(HISTORY_SINGLE_FILE)
+    return jsonify(data_list)
+
+
+@app.route('/history/bulk', methods=['GET'])
+def get_history_for_bulk_test():
+    data_list = readJsonFile(HISTORY_BULK_FILE)
+    return jsonify(data_list)
+
 
 ParamList = {
     'CUDA_VISIBLE_DEVICES': '1',
