@@ -152,7 +152,7 @@ def predictAll():
     save_result(BASE_PATH + filename, {"result": saved_results})
 
     time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-    data = {"username": username, "time": time, "dataset": dataset, "download_url": filename}
+    data = {"username": username, "time": time, "dataset": dataset, "download": filename}
     saveToJsonFile(HISTORY_BULK_FILE, data)
 
     return jsonify({"result": results, "filename": filename})
